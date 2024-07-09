@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Parameters
 REDO_CLUSTERING = True  # Set to True to redo clustering, False to use existing clustered_keywords.csv
-REDO_ENRICHMENT = True  # Set to True to redo keyword enrichment, False to use existing enriched_keywords.csv
+REDO_ENRICHMENT = False  # Set to True to redo keyword enrichment, False to use existing enriched_keywords.csv
 REDO_GRAPHS = True  # Set to True to redo graph generation, False to use existing files
 KEYWORDS_TO_AVOID = []
 logging.info("Starting now")
@@ -175,8 +175,8 @@ else:
     enriched_data, trends_data_list, monthly_searches_data_list = asyncio.run(process_data(search_volume_data))
 
     enriched_df = pd.DataFrame(enriched_data)
-    enriched_df.to_csv('enriched_keywords.csv', index=False)
-    logging.info("Enriched data saved to enriched_keywords.csv.")
+    # enriched_df.to_csv('enriched_keywords.csv', index=False)
+    # logging.info("Enriched data saved to enriched_keywords.csv.")
 
     pd.DataFrame(trends_data_list).to_csv('trends_data.csv', index=False)
     logging.info("Trends data saved to trends_data.csv.")
@@ -185,9 +185,9 @@ else:
     logging.info("Monthly searches data saved to keyword_volume.csv.")
 
 # Check if the clustered keywords file exists
-if os.path.exists('clustered_keywords.csv') and not REDO_CLUSTERING:
+if REDO_CLUSTERING:
     logging.info("Loading clustered keywords from existing file.")
-    enriched_df = pd.read_csv('clustered_keywords.csv')
+    # enriched_df = pd.read_csv('enriched_keywords.csv')
 else:
     logging.info("No existing clustered keywords file found or redoing clustering. Performing clustering.")
     if 'cluster' in enriched_df.columns:
@@ -223,8 +223,8 @@ else:
         logging.info("No keywords meet the search volume criteria for clustering.")
         enriched_df['cluster'] = -1  # Assign a default cluster value for all
 
-    enriched_df.to_csv('clustered_keywords.csv', index=False)
-    logging.info("Clustered data saved to clustered_keywords.csv.")
+    enriched_df.to_csv('enriched_keywords.csv', index=False)
+    logging.info("Clustered data saved to enriched_keywords.csv.")
 
 # Filter out the keywords to avoid from the DataFrame
 enriched_df = enriched_df[~enriched_df['keyword'].isin(KEYWORDS_TO_AVOID)]
