@@ -31,6 +31,8 @@ This repository contains a Python script for analyzing and clustering keywords b
    DATAFORSEO_API_KEY=your_dataforseo_api_key
    OPENAI_API_KEY=your_openai_api_key
 ```
+Add your keywords.csv file to the folder
+
 ## Usage
 
 Run the script:
