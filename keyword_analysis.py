@@ -17,8 +17,8 @@ from wordcloud import WordCloud
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# This script performs keyword analysis using various APIs to enrich the data and generate insights.
-# It fetches search volume data from DataForSEO API, trends data from Google Trends API, and clusters the keywords based on their embeddings.
+# This script performs keyword analysis using DataForSEO APIs to enrich the data and generate insights.
+# It fetches search volume data from Google Ads API, trends data from Google Trends API or DataFroSEO trends API, and clusters the keywords based on their embeddings.
 # It then generates a summary report, word clouds for each cluster, and various charts for insights.
 # The script uses the Sentence Transformers library for text embeddings and OpenAI's GPT-3.5 for summarization.
 # asyncio and aiohttp are used for asynchronous API requests to improve performance.
