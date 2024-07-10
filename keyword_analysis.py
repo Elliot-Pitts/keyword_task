@@ -235,7 +235,10 @@ if REDO_CLUSTERING:
         filtered_df['cluster'] = clustering.fit_predict(embeddings)
 
         # Merge the clusters back into the original DataFrame
-        enriched_df = filtered_df
+        # Give filtered out keywords a cluster of -1
+        enriched_df = enriched_df.merge(filtered_df[['keyword', 'cluster']], on='keyword', how='left')
+        enriched_df['cluster'] = enriched_df['cluster'].fillna(-1).astype(int)
+
         # Summary and Insights
         logging.info("Generating summary and insights.")
 
@@ -245,9 +248,12 @@ if REDO_CLUSTERING:
             return list(keywords)
 
         # Group by cluster and aggregate the data
-        summary = enriched_df.groupby('cluster').agg({
+        summary = filtered_df.groupby('cluster').agg({
             'search_volume': 'sum',
             'competition_index': 'mean',
+            "cpc": "mean",
+            "low_top_of_page_bid": "mean",
+            "high_top_of_page_bid": "mean",
             'keyword': collect_keywords
         }).reset_index()
 
@@ -274,9 +280,9 @@ if REDO_CLUSTERING:
 
         # Aggregating monthly searches by cluster
         logging.info("Aggregating monthly searches by cluster.")
-        enriched_df['monthly_searches'] = enriched_df['monthly_searches'].apply(lambda x: json.loads(x.replace("'", '"')) if isinstance(x, str) else x)
+        filtered_df['monthly_searches'] = filtered_df['monthly_searches'].apply(lambda x: json.loads(x.replace("'", '"')) if isinstance(x, str) else x)
         monthly_searches_list = []
-        for _, row in enriched_df.iterrows():
+        for _, row in filtered_df.iterrows():
             for search in row['monthly_searches']:
                 monthly_searches_list.append({
                     'cluster': row['cluster'],
@@ -291,9 +297,9 @@ if REDO_CLUSTERING:
 
         # Aggregating trends by cluster
         logging.info("Aggregating trends by cluster.")
-        enriched_df['trends'] = enriched_df['trends'].apply(lambda x: json.loads(x.replace("'", '"')) if isinstance(x, str) else x)
+        filtered_df['trends'] = filtered_df['trends'].apply(lambda x: json.loads(x.replace("'", '"')) if isinstance(x, str) else x)
         trends_list = []
-        for _, row in enriched_df.iterrows():
+        for _, row in filtered_df.iterrows():
             for trend in row['trends']:
                 trends_list.append({
                     'cluster': row['cluster'],
@@ -343,7 +349,8 @@ if REDO_GRAPHS:
     # Generate word clouds for each cluster
     # This was used in testing to quickly understand how the clustering has performed, have left it in for now
     logging.info("Generating word clouds for each cluster.")
-    for cluster_id in enriched_df['cluster'].unique():
+    # exclude the -1 cluster as this is the default cluster for keywords that did not meet the search volume criteria
+    for cluster_id in enriched_df[enriched_df['cluster'] != -1]['cluster'].unique():
         cluster_keywords = enriched_df[enriched_df['cluster'] == cluster_id]['keyword']
         frequencies = cluster_keywords.value_counts().to_dict()
         wordcloud = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(frequencies)
