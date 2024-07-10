@@ -41,6 +41,9 @@ REDO_GRAPHS = True  # Set to True to redo graph generation, False to not generat
 KEYWORDS_TO_AVOID = [] # Add any keywords you want to avoid in the analysis
 logging.info("Starting keyword analysis script.")
 
+five_years_ago = pd.Timestamp.now() - pd.DateOffset(years=5)
+now = pd.Timestamp.now()
+
 def fetch_data(api_url, payload, headers):
     response = requests.post(api_url, headers=headers, data=payload)
     return response.json()
@@ -49,7 +52,7 @@ def fetch_data_for_keywords(keywords):
     # Fetch search volume data for a list of keywords using DataForSEO API, can batch up to 1000 keywords
     logging.info("Fetching search volume data for keywords.")
     url = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
-    payload = json.dumps([{"date_from": "2019-06-30", "date_to": "2024-06-30", "keywords": keywords, "sort_by": "relevance"}])
+    payload = json.dumps([{"date_from": five_years_ago.strftime('%Y-%m-%d'), "date_to": now.strftime('%Y-%m-%d'), "keywords": keywords}])
     headers = {
         'Authorization': f'Basic {os.getenv("DATAFORSEO_API_KEY")}',
         'Content-Type': 'application/json'
@@ -63,7 +66,7 @@ async def fetch_trends_data_for_keyword(session, keyword, api_type):
         url = "https://api.dataforseo.com/v3/keywords_data/google_trends/explore/live"
     else:
         url = "https://api.dataforseo.com/v3/keywords_data/dataforseo_trends/explore/live"
-    payload = json.dumps([{"date_from": "2019-06-30", "date_to": "2024-06-30", "type": "web", "keywords": [keyword]}])
+    payload = json.dumps([{"date_from": five_years_ago.strftime('%Y-%m-%d'), "date_to": now.strftime('%Y-%m-%d'), "type": "web", "keywords": [keyword]}])
     headers = {
         'Authorization': f'Basic {os.getenv("DATAFORSEO_API_KEY")}',
         'Content-Type': 'application/json'
@@ -167,6 +170,9 @@ async def process_data(search_volume_data):
                     "search_avg_change": search_avg_change,
                     "trend_direction": trend_direction,
                     "trend_avg_change": trend_avg_change,
+                    "cpc": keyword_data.get('cpc'),
+                    "low_top_of_page_bid": keyword_data.get('low_top_of_page_bid'),
+                    "high_top_of_page_bid": keyword_data.get('high_top_of_page_bid'),
                     "trends": trends_list,
                     "monthly_searches": monthly_searches_list,
                 }
